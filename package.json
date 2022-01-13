@@ -1,0 +1,15 @@
+{
+  "name": "notion-randomizer",
+  "version": "1.0.0",
+  "description": "A simple app for receiving a random Notion page",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@notionhq/client": "^0.4.12",
+    "dotenv": "^11.0.0"
+  }
+}
