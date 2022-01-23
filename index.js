@@ -2,28 +2,35 @@ const { Client } = require('@notionhq/client');
 require('dotenv').config();
 
 (async () => {
-  const PARA_NAMES = ['1-Projects', '2-Areas', '3-Resources'];
   const notion = new Client({ auth: process.env.NOTION_TOKEN });
 
-  let allNotes = [];
+  // We must include undefined as an option to account for the first page, for which we are provided no cursor
+  let cursors = [undefined]
+  const PAGE_SIZE = 100;
 
-  const sharedEntities = (await notion.search()).results;
+  async function search(start_cursor) {
+    const searchResponse = await notion.search({
+      object: 'page',
+      page_size: PAGE_SIZE,
+      start_cursor
+    });
+    
+    if (searchResponse.has_more) {
+      cursors.push(searchResponse.next_cursor);
+      await search(searchResponse.next_cursor);
+    }
+  }
 
-  const paraPages = sharedEntities.filter(({ url }) => PARA_NAMES.some((name) => url.includes(name)));
-  
-  await Promise.all(paraPages.map(async function handlePage(page) {
-      const pageBlocks = (await notion.blocks.children.list({ block_id: page.id })).results;
-      const notesDatabase = pageBlocks.find(({ type }) => type === 'child_database');
+  await search();
 
-      if (!notesDatabase) return;
+  const randomCursor = cursors[Math.floor(Math.random() * (cursors.length - 1))];
 
-      const notes = (await notion.databases.query({ database_id: notesDatabase.id })).results;
-      allNotes = [...allNotes, ...notes.map(({url}) => url)];
+  const results = (await notion.search({
+    object: 'page',
+    page_size: PAGE_SIZE,
+    start_cursor: randomCursor
+  })).results;
 
-      await Promise.all(notes.map(handlePage));
-    })
-  );
-
-  const randomNote = allNotes[Math.floor(Math.random() * allNotes.length)];
-  console.log("🚀 ~ file: index.js ~ line 31 ~ randomNote", randomNote)
+  const randomResult = results[Math.floor(Math.random() * (results.length - 1))];
+  console.log("RANDOM NOTE URL:", randomResult.url)
 })();
