@@ -8,6 +8,7 @@
   },
   "permissions": ["identity", "storage"],
   "host_permissions": ["https://api.notion.com/v1/oauth/token"],
+  "options_page": "options.html",
   "action": {
     "default_popup": "popup.html",
     "default_icon": {
