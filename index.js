@@ -1,21 +1,27 @@
 const logger = console;
 
 const authButton = document.getElementById('authenticate');
-const noteButton = document.getElementById('getRandomNote');
+const authenticatedElement = document.getElementById('authenticated');
+const noteButton = document.getElementById('get-random-note');
+const logOutButton = document.getElementById('log-out');
+const loaderElement = document.getElementById('loader');
 
 function updateUi(accessToken) {
   logger.debug('Updating UI with access token: ', accessToken);
 
-  if (accessToken) {
+  const hasAccessToken = !!accessToken && (typeof accessToken === 'string') && accessToken.includes('secret');
+
+  if (hasAccessToken) {
     authButton.hidden = true;
-    noteButton.hidden = false;
+    authenticatedElement.hidden = false;
   } else {
     authButton.hidden = false;
-    noteButton.hidden = true;
+    authenticatedElement.hidden = true;
   }
 }
 
 async function init() {
+  logger.debug('Initializing extension');
   let accessToken = null;
   chrome.runtime.sendMessage({ getAccessToken: true }, (response) => {
     updateUi(response);
@@ -26,13 +32,27 @@ async function init() {
     logger.debug('Clicked auth button');
     const response = chrome.runtime.sendMessage({ login: true }, updateUi);
     if (response?.error) throw new Error('Failed to complete login.', response.error);
+
+    accessToken = response;
   });
   
   noteButton.addEventListener('click', async () => {
     logger.debug('Clicked note button');
     if (!accessToken) throw new Error('Attempted to get random note without access token.');
+
+    loaderElement.hidden = false;
+    authenticatedElement.hidden = true;
     const randomNote = await getRandomNote(accessToken);
     window.open(randomNote.url, '_blank');
+    loaderElement.hidden = true;
+  });
+
+  logOutButton.addEventListener('click', async () => {
+    logger.debug('Clicked log out button');
+    if (!accessToken) logger.warn('Attempting to log out without access token.');
+
+    const response = chrome.runtime.sendMessage({ logOut: true }, updateUi);
+    if (response?.error) throw new Error('Failed to log out.', response.error);
   });
 }
 

@@ -1,12 +1,95 @@
+body {
+  font-size: 14px;
+}
+
 button {
-  outline: none;
-  margin: 10px;
-  border: none;
-  border-radius: 2px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 32px;
+  width: 100%;
+  padding: 0 12px;
+  border-radius: 3px;
+  border: 1px solid rgba(55, 53, 47, 0.16);
   white-space: nowrap;
+  font-size: 14px;
+  line-height: 1.2;
   cursor: pointer;
+  background-color: white;
+  transition: background-color 0.2s ease-in 0s;
+}
+
+button:hover {
+  background-color: rgb(225, 225, 225);
+}
+
+button > svg + * {
+  margin-left: 1em;
+}
+
+button.primary {
+  background-color: rgb(46, 170, 220);
+  color: white;
+  font-weight: bold;
 }
 
 button.current {
   box-shadow: 0 0 0 2px white, 0 0 0 4px black;
+}
+
+.loader {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1em;
+  white-space: nowrap;
+  font-size: 1em;
+}
+
+.spinner {
+  animation: rotate 2s linear infinite;
+  width: 2em;
+  height: 2em;
+}
+
+.spinner > .path {
+  stroke: rgb(74, 74, 74);
+  stroke-linecap: round;
+  animation: dash 1.5s ease-in-out infinite;
+}
+
+@keyframes rotate {
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes dash {
+  0% {
+    stroke-dasharray: 1, 150;
+    stroke-dashoffset: 0;
+  }
+  50% {
+    stroke-dasharray: 90, 150;
+    stroke-dashoffset: -35;
+  }
+  100% {
+    stroke-dasharray: 90, 150;
+    stroke-dashoffset: -124;
+  }
+}
+
+[hidden] {
+  display: none !important;
+}
+
+.flex-column {
+  display: flex;
+  flex-direction: column;
+  gap: 1em;
+}
+
+.flex-center {
+  justify-content: center;
+  align-items: center;
 }

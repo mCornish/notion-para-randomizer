@@ -45,9 +45,14 @@ async function completeAuth(redirectUrl) {
 
   logger.debug('Successfully retrieved access token.');
 
-  chrome.storage.sync.set({
-    accessToken: responseJson.access_token,
-    user: responseJson.owner.user,
+  return new Promise((resolve) => {
+    chrome.storage.sync.set({
+      accessToken: responseJson.access_token,
+      user: responseJson.owner.user,
+    }, () => {
+      logger.debug('Successfully stored access token.');
+      resolve(responseJson.access_token);
+    });
   });
 }
 
@@ -56,13 +61,30 @@ async function startAuth() {
   
   logger.debug('launchWebAuthFlow', authUrl);
   
-  chrome.identity.launchWebAuthFlow({
-    url: authUrl,
-    interactive: true
-  }, async (redirectUrl) => {
-    logger.debug('launchWebAuthFLow login successful: ', redirectUrl);
+  return new Promise((resolve, reject) => {
+    try {
+      chrome.identity.launchWebAuthFlow({
+        url: authUrl,
+        interactive: true
+      }, async (redirectUrl) => {
+        logger.debug('launchWebAuthFlow login successful: ', redirectUrl);
 
-    completeAuth(redirectUrl);
+        const accessToken = await completeAuth(redirectUrl);
+        resolve(accessToken);
+      });
+    } catch (error) {
+      logger.error('Error while starting auth.', error);
+      reject(error);
+    }
+  });
+}
+
+function logOut() {
+  logger.debug('Logging out');
+  chrome.storage.sync.set({
+    accessToken: null,
+    cursor: null,
+    user: null,
   });
 }
 
@@ -79,7 +101,11 @@ async function init() {
   
     try {
       if (request.login) {
-        startAuth();
+        startAuth().then(sendResponse);
+        return true;
+      } else if (request.logOut) {
+        logOut();
+        sendResponse({ success: true });
       } else if (request.getAccessToken) {
         logger.debug('getAccessToken: ', accessToken);
         sendResponse(accessToken);
